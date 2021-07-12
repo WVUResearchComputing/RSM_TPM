@@ -52,7 +52,6 @@ Mkfile.old
 dkms.conf
 
 # Ignore Autotools generated files
-*/tests
 *Makefile.in
 tpm/aclocal.m4
 tpm/autom4te.cache
