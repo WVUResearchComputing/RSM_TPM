@@ -47,7 +47,7 @@ int rank;
 MPI_Comm io_comm;
 #endif /* PARALLEL */
 
-  
+
 
 int main(int argc, char *argv[]) {
 
@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     int ROTATION_FLAG = 0;
     int NUM_POINTS = 0;
     int NCOMP = 0;
-    int NVAR = 0; 
+    int NVAR = 0;
 
 #if PARALLEL
     int ppN; // Particles per processor
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
     space_id = H5Dget_space(dataset_id);
     ndims = H5Sget_simple_extent_dims(space_id, dims, NULL);
 
-    printf("Dims: %ld %ld\n", dims[0], dims[1]);
+    printf("Dims: %llu %llu\n", dims[0], dims[1]);
 
     /*Allocate array of pointers to rows*/
     rdata = (double **) malloc(dims[0] * sizeof(double *));
@@ -206,7 +206,7 @@ int main(int argc, char *argv[]) {
     if(GSI_MODEL == 0){NCOMP = NVAR - 6; }
     else if (GSI_MODEL == 1) {NCOMP = NVAR - 6;}
     else {NCOMP = NVAR - 7;}
-	
+
     printf("GSI_MODEL=%d NCOMP=%d\n",GSI_MODEL, NCOMP);
 
     /* Define new data variables */
@@ -264,12 +264,12 @@ int main(int argc, char *argv[]) {
 	if (ncols+NCOMP>dims[1])
 	{
 	   printf("ERROR: Not enough columns in data" );
-           return -1;	
+           return -1;
 	}
 
        for(j = 0;j<NCOMP;j++) {
 	        Comp_Deflec[i][j] = rdata[i][j+ncols];
-		printf("C%d= %12lf ", j,Comp_Deflec[i][j]);        
+		printf("C%d= %12lf ", j,Comp_Deflec[i][j]);
 	}
         printf("\n");
 
@@ -311,8 +311,8 @@ int main(int argc, char *argv[]) {
   FILE *farea = fopen(areafilename, "w");
   if(farea == NULL)
   {
-	printf("Error opening %s\n",areafilename);  
-  	exit(1);             
+	printf("Error opening %s\n",areafilename);
+  	exit(1);
   }
   //fprintf(farea,"Projected Area of Satellite \n");
 
@@ -322,7 +322,7 @@ int main(int argc, char *argv[]) {
   for(i=rank*ppN; i<(rank+1)*ppN; i++) {
 
 
-    // If rotation is being performed, then the appropriate filename must be read 
+    // If rotation is being performed, then the appropriate filename must be read
     if(ROTATION_FLAG == 2){
     sprintf(filename,"%s",objname);
     sprintf(istr,"%d",i);
@@ -330,7 +330,7 @@ int main(int argc, char *argv[]) {
     strcat(filename,".stl");}
     else{
     strcpy(filename,objname);
-    }  // Otherwise use the objectname as the filename 
+    }  // Otherwise use the objectname as the filename
     printf("I am rank %d, computing case %d : %s\n",rank,i, filename);
 
 
@@ -338,7 +338,7 @@ int main(int argc, char *argv[]) {
     iTOT=0;
     if(rank==0) {
       printf("Sim for Processor = %d \n",i);
-      // WARNING: ppN is now Integer the resulting division will be integer too 
+      // WARNING: ppN is now Integer the resulting division will be integer too
       //if((int)(100*i/ppN) % 1 == 0 && (int)(100*i/ppN)/1 > 0) {
 	//printf("%d percent complete\r", (int)(100*i/ppN));
       //}
@@ -356,7 +356,7 @@ int main(int argc, char *argv[]) {
       }
 
 
-      else{fprintf(fout, "%e %e %e %e %e %e %e %e \n", 
+      else{fprintf(fout, "%e %e %e %e %e %e %e %e \n",
 	    LHS_Umag[i], LHS_Ts[i], LHS_Ta[i], LHS_An[i], LHS_St[i], LHS_theta[i], LHS_phi[i], Cd);} //CLL
       if(ROTATION_FLAG == 2){
              fprintf(farea, "%s : Area =  %e Yaw = %e Pitch = %e ", filename,area,LHS_phi[i],LHS_theta[i]);
@@ -367,8 +367,8 @@ int main(int argc, char *argv[]) {
              fprintf(farea,"\n");
                   }
        else{fprintf(farea, "%s : Area =  %e Yaw = %e Pitch = %e \n", filename,area,LHS_phi[i],LHS_theta[i]);}
-      } //Serial loop end 
-    
+      } //Serial loop end
+
   }
 #else /* PARALLEL */
 
@@ -376,24 +376,24 @@ int main(int argc, char *argv[]) {
   sprintf(filename,"%s",objname);
   for(i=0; i<NUM_POINTS; i++) {    // Parallel Loop
     iTOT=0;
-     
+
     Cd = testparticle(filename, LHS_Umag[i], LHS_theta[i], LHS_phi[i], LHS_Ts[i], LHS_Ta[i], LHS_Ep[i], \
 		      LHS_Al[i], LHS_An[i], LHS_St[i], X, GSI_MODEL, iTOT, &area);
     pc = 100*i/NUM_POINTS; //percentage complete
     //printf("Cd = %e\n", Cd);
 
-         
+
     if(GSI_MODEL==1){ //DRIA
-         fprintf(fout, "%e %e %e %e %e %e %e\n", 
+         fprintf(fout, "%e %e %e %e %e %e %e\n",
               LHS_Umag[i], LHS_Ts[i], LHS_Ta[i], LHS_Al[i],LHS_theta[i], LHS_phi[i],  Cd);
 
     }
     else{ //CLL
-    fprintf(fout, "%e %e %e %e %e %e %e %e\n", 
+    fprintf(fout, "%e %e %e %e %e %e %e %e\n",
 	    LHS_Umag[i], LHS_Ts[i], LHS_Ta[i], LHS_An[i], LHS_St[i], LHS_theta[i], LHS_phi[i],  Cd);
-     } 
-    
-    if(ROTATION_FLAG == 2){ 
+     }
+
+    if(ROTATION_FLAG == 2){
         fprintf(farea, "%s : Area =  %e Yaw = %e Pitch = %e ", filename,area,LHS_phi[i],LHS_theta[i]);
         for(j = 0;j<NCOMP;j++){
                  Comp_Deflec[i][j] = rdata[i][j+ncols];
@@ -421,21 +421,21 @@ int main(int argc, char *argv[]) {
       sprintf(outfilename, "tempfiles/Cdout_%s%d.dat", zeros, i);
       fout = fopen(outfilename, "r");
       sprintf(areaoutfilename,"Outputs/Projected_Area/area_%s_%s%d.dat", objname,zeros,i);
-      farea = fopen(areaoutfilename,"r");    
+      farea = fopen(areaoutfilename,"r");
       if(fout == NULL)
-      {printf("Error opening %s\n",outfilename);  
-  	   exit(1);             
+      {printf("Error opening %s\n",outfilename);
+  	   exit(1);
       }
      if(farea == NULL)
-      {printf("Error opening %s\n",areaoutfilename);  
-      exit(1);             
+      {printf("Error opening %s\n",areaoutfilename);
+      exit(1);
       }
-    
+
      while(!feof(fout)) {
 	     if(fgets(line, 1024, fout)) {
 	          fprintf(ftot, line);
          }
-     }   
+     }
     while(!feof(farea)) {
          if(fgets(line,1024,farea)){
              fprintf(ftota,line);
@@ -448,9 +448,9 @@ int main(int argc, char *argv[]) {
     fclose(ftot);
     fclose(ftota);
   }
-  
+
 #endif /* PARALLEL */
-   
+
 
   free(LHS_Umag);
   free(LHS_theta);
@@ -462,7 +462,7 @@ int main(int argc, char *argv[]) {
   free(LHS_Al);
   free(LHS_Ep);
 
- 
+
 
 
   gsl_rng_free(rr);
@@ -481,7 +481,7 @@ int main(int argc, char *argv[]) {
 
 }
 
-  
+
  /******************************** READ INPUT ***************************/
 void read_input(char objname[1024], double X[], int *GSI_MODEL, int *ROTATION_FLAG)
 {
@@ -495,7 +495,7 @@ void read_input(char objname[1024], double X[], int *GSI_MODEL, int *ROTATION_FL
   if(f == NULL)
   {
   printf("Error opening %s\n","temp_variables.txt");
-    exit(1);             
+    exit(1);
   }
 
   char line[1024];
@@ -531,7 +531,7 @@ void read_input(char objname[1024], double X[], int *GSI_MODEL, int *ROTATION_FL
 
 }
 
-/***************************** DEFINE ZEROS FORMATTING ***************************/ 
+/***************************** DEFINE ZEROS FORMATTING ***************************/
  void defzeros(int i, char **zeros)
  {
 
@@ -550,11 +550,11 @@ void read_input(char objname[1024], double X[], int *GSI_MODEL, int *ROTATION_FL
        *zeros="p0";
      }
    }
-   
+
  }
 
 
-/***************************** TEST PARTICLE MONTE CARLO ***************************/ 
+/***************************** TEST PARTICLE MONTE CARLO ***************************/
 double testparticle(char filename[1024], double Umag, double theta, double phi, double Ts, double Ta, double epsilon, double alpha, double alphan, double sigmat, double X[], int GSI_MODEL, int iTOT,double *area)
 
 {
@@ -571,7 +571,7 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
   struct particle_struct *particle;
   struct cell_struct *cell;
 
-  int i, j, k, ipart, species; 
+  int i, j, k, ipart, species;
   int particle_surf = 0;
   int nfacets = 0;
   int min_fc = -1;
@@ -626,7 +626,7 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
   double m[NSPECIES] = {2.65676e-26, 5.31352e-26,  2.32586e-26,  4.65173e-26,  6.65327e-27,  1.67372e-27};
 
   double m_avg = 0.0;
-  
+
   for(i=0; i<NSPECIES; i++) {
     m_avg = m_avg + X[i]*m[i];
   }
@@ -683,7 +683,7 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 
   /* COMPUTE PROJECTED AREA OF MESH */
   proj_area = projected_area(XMIN, YMIN, ZMIN, XMAX, YMAX, ZMAX, Ux, Uy, Uz, nfacets, pfacet);
-  *area = proj_area; //return projected area for  data files 
+  *area = proj_area; //return projected area for  data files
   /* COMPUTE SPECIES PARTICLE COUNTERS */
   nspec[0] = (int)(NPART*X[0]);
   for(j=1; j<NSPECIES; j++) {
@@ -699,7 +699,7 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
       pcounter[i][j] = 0;
     }
   }
-  
+
   for(k=0; k<NSPECIES*NSURF; k++) {
     cumul_dist[k] = 0.0;
   }
@@ -707,11 +707,11 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
   for(j=0; j<NSPECIES; j++) {
     sp_flux[j] = 0.0;
   }
-  
+
   /* COMPUTE SPEED RATIO, SURFACE FLUX, AND TOTAL FLUX */
   for(i=0; i<NSURF; i++) {
     for(j=0; j<NSPECIES; j++) {
-      Cmp[j] = sqrt(2.0*kB*Ta/m[j]);             
+      Cmp[j] = sqrt(2.0*kB*Ta/m[j]);
       s[i][j] = Ubulk[i]/Cmp[j];
       surf_flux[i][j] = AT_NUM_DENSITY*X[j]*Cmp[j]*surf_area[i]*
 	(exp(-s[i][j]*s[i][j]) + sqrt(TPM_PI)*s[i][j]*(1.0 + erf(s[i][j])))/(2.0*sqrt(TPM_PI));
@@ -723,7 +723,7 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
   /* COMPUTE TOTAL FLUX BY SUMMING OF SPECIES FLUXES */
   for(i=0; i<NSURF; i++) {
     tot_flux += tsflux[i];
-  } 
+  }
 
   /* COMPUTE PARTICLE WEIGHT */
   Weight = tot_flux/NPART;
@@ -749,12 +749,12 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
     if (ipart%100000==0) printf(">>>%s<<<  Particle No %d\n", filename, ipart);
 
     particle = pparticle + ipart;
-    
+
 #if SAMPLE
     sample = psample + ipart;
     sample->t = 1.0e6;
 #endif /* SAMPLE */
-    
+
     /* DETERMINE SURFACE TO CREATE PARTICLE ON */
     r2 = ranf0(rr);
     for(k=0; k<NSURF*NSPECIES; k++) {
@@ -771,10 +771,10 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 
     /* COMPUTE PARTICLE POSITION */
     pposition(XMIN, YMIN, ZMIN, XMAX, YMAX, ZMAX, pparticle, ipart, particle_surf);
-      
+
     /* COMPUTE PARTICLE VELOCITY */
     pvelocity(s, Usurf, direction, Cmp, particle_surf, pparticle, ipart, species);
-    
+
 #if SAMPLE
     for(i=0; i<3; i++) {
       sample->ivel[i] = particle->vel[i];
@@ -789,9 +789,9 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 
 	//if ((scount+1)%10 == 0)
 	//{
-      //printf("scount=%d\n",scount);	
-	//} 	
-	
+      //printf("scount=%d\n",scount);
+	//}
+
 
 	/* INITIALIZE PARTICLE CELL TRACK */
 	for(i=0; i<MAXCELLS; i++) {
@@ -803,11 +803,11 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 
 	/* COMPILE THE LIST OF FACETS THAT A PARTICLE MAY HAVE INTERACTED WITH */
 	compile_facet_list(pfacet, nfacets, pcell, particle_cell_track, total_facet_list, &fcount, ipart);
-      
+
 	/* COMPUTE INTERSECTION OF PARTICLE PATH AND FACET PLANE */
-	pf_intercept(&min_fc, pfacet, pparticle, psample, ipart, particle_surf, nfacets, pcell, 
+	pf_intercept(&min_fc, pfacet, pparticle, psample, ipart, particle_surf, nfacets, pcell,
 		     particle_cell_track, total_facet_list, fcount);
-      
+
 	/* PARTICLE INCIDENT ON FINITE FACET PLANE */
 	if(min_fc >=0) {
 
@@ -816,10 +816,10 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 	  /* COMPUTE THE GAS-SURFACE INTERACTION */
 	  Vw = sqrt(2.0*kB*Ts/m[species]);
 	  gsi(pparticle, ipart, pfacet, min_fc, Vw, pveln, GSI_MODEL, epsilon, alpha, alphan, sigmat);
-	
+
 	  /* COMPUTE FORCE ON OBJECT BASED ON CHANGE IN VELOCITY VECTOR */
 	  for(i=0; i<3; i++) {
- 
+
 	    dF[i] = Weight*m[species]*(particle->vel[i] - pveln[i]);
 
 	    /* UPDATE VELOCITY */
@@ -828,11 +828,11 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 	    sample->rvel[i] = particle->vel[i];
 #endif /* SAMPLE */
 	  }
-	
+
 	  Fx = Fx + dF[0];
 	  Fy = Fy + dF[1];
 	  Fz = Fz + dF[2];
-	
+
 	}
 
 	if(scount>MAXCOUNT) {
@@ -840,7 +840,7 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 	}
 
       } while (min_fc >= 0);
-      
+
     } /* END LOOP OVER PARTICLES */
 
 #if SAMPLE
@@ -878,7 +878,7 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 
 }
 
-  
+
  /******************************** MESH READ ***************************/
 int read_num_lines(char filename[1024])
 {
@@ -898,8 +898,8 @@ int read_num_lines(char filename[1024])
   FILE *f = fopen(filename, "r");
   if(f == NULL)
   {
-	printf("Error opening %s\n",filename);  
-  	exit(1);             
+	printf("Error opening %s\n",filename);
+  	exit(1);
   }
 
   /*Check that file exists*/
@@ -907,8 +907,8 @@ int read_num_lines(char filename[1024])
     printf("Mesh File does not exist\n");
     exit(1);
   }
-  
-  while (EOF != (ch=fgetc(f))) 
+
+  while (EOF != (ch=fgetc(f)))
     if (ch=='\n')
       num_lines++;
 
@@ -916,7 +916,7 @@ int read_num_lines(char filename[1024])
 
   /* DETERMINE NUMBER OF FACETS */
   nfacets = (num_lines-2)/7;
-  
+
   chdir("../..");
 
   return(nfacets);
@@ -925,7 +925,7 @@ int read_num_lines(char filename[1024])
 
 
 /******************************** FACET PROPERTIES ***************************/
-void facet_properties(char filename[1024], double Ux, double Uy, double Uz, int nfacets, struct facet_struct *pfacet, 
+void facet_properties(char filename[1024], double Ux, double Uy, double Uz, int nfacets, struct facet_struct *pfacet,
 		      double Umag)
 {
 
@@ -942,8 +942,8 @@ void facet_properties(char filename[1024], double Ux, double Uy, double Uz, int 
   FILE *f = fopen(filename, "r");
   if(f == NULL)
   {
-  printf("Error opening %s\n",filename);  
-    exit(1);             
+  printf("Error opening %s\n",filename);
+    exit(1);
   }
 
 
@@ -1035,7 +1035,7 @@ void facet_properties(char filename[1024], double Ux, double Uy, double Uz, int 
     dist1[0] = facet->vertex2[0] - facet->vertex1[0];
     dist1[1] = facet->vertex2[1] - facet->vertex1[1];
     dist1[2] = facet->vertex2[2] - facet->vertex1[2];
-    
+
     /* Find length of 2st side of the triangle */
     dist2[0] = facet->vertex1[0] - facet->vertex3[0];
     dist2[1] = facet->vertex1[1] - facet->vertex3[1];
@@ -1045,7 +1045,7 @@ void facet_properties(char filename[1024], double Ux, double Uy, double Uz, int 
     cross(dist1, dist2, tc);
 
     facet->area = 0.5*sqrt(dot(tc, tc));
-     
+
   }
 
   chdir("../..");
@@ -1063,9 +1063,9 @@ double projected_area(double XMIN, double YMIN, double ZMIN, double XMAX, double
   /*         vertex1 = x, y, z positions of 1st vertex */
   /*         vertex2 = x, y, z positions of 2nd vertex */
   /*         vertex3 = x, y, z positions of 3rd vertex */
-           
+
   /* Outputs: facet_area = Facet Area [m^2] */
-  /*          proj_area = Projected Area of the Mesh [m^2] */ 
+  /*          proj_area = Projected Area of the Mesh [m^2] */
 
   struct facet_struct *facet;
   double proj_area = 0.0;
@@ -1077,7 +1077,7 @@ double projected_area(double XMIN, double YMIN, double ZMIN, double XMAX, double
   double sp, cp, st, ct;
 
   int ifacet, i, j, k, n;
-  
+
   int idir0 = 0;
   int msort = 64;
   int mgrid = 4096;
@@ -1267,8 +1267,8 @@ double projected_area(double XMIN, double YMIN, double ZMIN, double XMAX, double
     j1sort[i] = 0;
     j2sort[i] = 0;
   }
-  
-  for(ifacet=0; ifacet<nfacets; ifacet++) { 
+
+  for(ifacet=0; ifacet<nfacets; ifacet++) {
 
     facet = pfacet + ifacet;
 
@@ -1285,7 +1285,7 @@ double projected_area(double XMIN, double YMIN, double ZMIN, double XMAX, double
     dy21[ifacet] = y2[ifacet] - y1[ifacet];
     dy32[ifacet] = y3[ifacet] - y2[ifacet];
     dy13[ifacet] = y1[ifacet] - y3[ifacet];
-    
+
     j1 = (int)((x1[ifacet] - xmin[ix[idir0]])*dxi[idir0]);
     j2 = (int)((x2[ifacet] - xmin[ix[idir0]])*dxi[idir0]);
     j3 = (int)((x3[ifacet] - xmin[ix[idir0]])*dxi[idir0]);
@@ -1294,8 +1294,8 @@ double projected_area(double XMIN, double YMIN, double ZMIN, double XMAX, double
     k2 = (int)((y2[ifacet] - xmin[iy[idir0]])*dyi[idir0]);
     k3 = (int)((y3[ifacet] - xmin[iy[idir0]])*dyi[idir0]);
 
-    
-  
+
+
     maxj = (int)fmax((double)j1, (double)j2);
     maxj = (int)fmax((double)j3, (double)maxj);
 
@@ -1321,7 +1321,7 @@ double projected_area(double XMIN, double YMIN, double ZMIN, double XMAX, double
     if(mink < 0) {
       mink = 0;
     }
-   
+
     for(j=minj; j<=maxj; j++) {
       for(k=mink; k<=maxk; k++) {
 	icount = icount + 1;
@@ -1333,7 +1333,7 @@ double projected_area(double XMIN, double YMIN, double ZMIN, double XMAX, double
     }
 
   }
-   
+
   area = 0.0;
   for(i=0; i<mgrid; i++) {
     iarea = 0;
@@ -1370,7 +1370,7 @@ double projected_area(double XMIN, double YMIN, double ZMIN, double XMAX, double
 
   free(xp);
   free(yp);
-  
+
   free(isort);
   free(j1sort);
   free(j2sort);
@@ -1411,7 +1411,7 @@ void domain_boundary(double *XMIN, double *YMIN, double *ZMIN, double *XMAX, dou
   /* Calculate the domain boundaries based on mesh */
   /* Inputs: nfacets = Number of Facets */
   /*         pfacet = Facet structure pointer          */
-            
+
   /* Outputs: = Xmin = X-direction domain minimum boundary [m] */
   /*            Xmax = X-direction domain maximum boundary [m] */
   /*            Ymin = Y-direction domain minimum boundary [m] */
@@ -1431,7 +1431,7 @@ void domain_boundary(double *XMIN, double *YMIN, double *ZMIN, double *XMAX, dou
   double A = 0.1; /* Safety factor on domain bounds */
 
   for(ifacet=0; ifacet<nfacets; ifacet++) {
-    
+
     facet = pfacet + ifacet;
 
     /* Determine X mininimum and maximum for this facet */
@@ -1511,7 +1511,7 @@ void max_facet_dimension(double XMIN, double YMIN, double ZMIN, double XMAX, dou
     }
 
   }
-    
+
   /* Compute cell size based on largest facet dimension in X, Y, and Z */
   nc[0] = (int)((XMAX-XMIN)/fmax[0]);
   nc[1] = (int)((YMAX-YMIN)/fmax[1]);
@@ -1521,7 +1521,7 @@ void max_facet_dimension(double XMIN, double YMIN, double ZMIN, double XMAX, dou
     if(nc[m] < 2) {
       nc[m] = 2;
     } else if(nc[m] > NCELLS) {
-      nc[m] = NCELLS; 
+      nc[m] = NCELLS;
     }
   }
 
@@ -1531,7 +1531,7 @@ void max_facet_dimension(double XMIN, double YMIN, double ZMIN, double XMAX, dou
 void create_grid(double XMIN, double YMIN, double ZMIN, double XMAX, double YMAX, double ZMAX, struct cell_struct *pcell, struct facet_struct *pfacet, int nfacets, int nc[3]) {
 
   /* Determine the positional boundaries for the cell grid */
-  
+
   /* Inputs: pcell = Starting address of cell structure */
   /*         XMIN = X-minimum domain boundary */
   /*         YMIN = Y-minimum domain boundary */
@@ -1551,7 +1551,7 @@ void create_grid(double XMIN, double YMIN, double ZMIN, double XMAX, double YMAX
       for(k=0; k<nc[2]; k++) { /* Z-position */
 	cell_number = i*nc[1]*nc[2] + nc[2]*j + k;
 	cell = pcell + cell_number;
-	
+
 	cell->top = ZMIN + (ZMAX - ZMIN)*((double)(k+1)/(double)nc[2]);
 	cell->bottom = ZMIN + (ZMAX - ZMIN)*((double)k/(double)nc[2]);
 
@@ -1582,7 +1582,7 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
   /*        pcell  = Cell structure      */
 
   /* Outputs: Facets indexed to cells */
-  
+
   int i, j, k;
   int ifacet;
   int counter;
@@ -1618,7 +1618,7 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
   for(i=0; i<nfacets; i++) {
     facet_ijkmin[i] = (double *) calloc(3, sizeof(double));
     facet_ijkmax[i] = (double *) calloc(3, sizeof(double));
-  }    
+  }
 
   cellcounter = (double ***) calloc(nc[0], sizeof(double));
   for(i=0; i<nc[0]; i++) {
@@ -1747,17 +1747,17 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 	  facet_overlaps[overlap_counter]=ifacet;
 	  overlap_counter++;
 	  break;
-	}	  
+	}
       }
     }
   }
-	
+
   /* Loop over possibly overlapping facets  */
   for(ifo=0; ifo<overlap_counter; ifo++) {
     oflag = 0;
-    
+
     ifacet = facet_overlaps[ifo];
-    
+
     /* Compute facet ijk min and max */
     for(i=0; i<3; i++) { /* Loop over vertices */
       for(j=0; j<3; j++) { /* Loop over ijk index */
@@ -1769,11 +1769,11 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 	}
       }
     }
-    
+
     facet = pfacet + ifacet;
-    
+
     for(ixyz=0; ixyz<3; ixyz++) { /* Loop over facet edges */
-      
+
       /* Calculate edge vector for each side*/
       for(i=0; i<3; i++) {
 	if(ixyz==0) {
@@ -1784,10 +1784,10 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 	  edgevec[i] = facet->vertex1[i] - facet->vertex3[i];
 	}
       }
-      
+
       for(ief=1; ief<NITER; ief++) {
-	
-	/* Compute iterated position along facet edge */	
+
+	/* Compute iterated position along facet edge */
 	for(i=0; i<3; i++) {
 	  if(ixyz==0) {
 	    edgepos[i] = facet->vertex1[i] + ((double)ief/(double)NITER)*edgevec[i];
@@ -1797,15 +1797,15 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 	    edgepos[i] = facet->vertex3[i] + ((double)ief/(double)NITER)*edgevec[i];
 	  }
 	}
-	
+
 	/* Loop over cells and check if iterated position lies within the cell */
-	for(i=facet_ijkmin[ifacet][0]; i<=facet_ijkmax[ifacet][0]; i++) { /* X-position */ 
+	for(i=facet_ijkmin[ifacet][0]; i<=facet_ijkmax[ifacet][0]; i++) { /* X-position */
 	  for(j=facet_ijkmin[ifacet][1]; j<=facet_ijkmax[ifacet][1]; j++) { /* Y-position */
 	    for(k=facet_ijkmin[ifacet][2]; k<=facet_ijkmax[ifacet][2]; k++) { /* Z-position */
 	      cell_number = i*nc[1]*nc[2] + nc[2]*j + k;
 	      cell = pcell + cell_number;
 	      dupflag = 0;
-	      
+
 	      /* Check iterated position */
 	      if((edgepos[0] > cell->back) && (edgepos[0] <= cell->front)) {
 		if((edgepos[1] > cell->left) && (edgepos[1] <= cell->right)) {
@@ -1815,7 +1815,7 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 			dupflag = 1;
 		      }
 		    }
-		    if(dupflag==0) {		    
+		    if(dupflag==0) {
 		      cell->facet_list[(int)cellcounter[i][j][k]] = ifacet;
 		      cellcounter[i][j][k]++;
 		      total_counter++;
@@ -1829,14 +1829,14 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 		    }
 		  }
 		}
-	      }	
+	      }
 	    }
-	  }  
+	  }
 	}
-      } 
+      }
     }
   }
-  
+
 
   free(facet_af);
   free(facet_overlaps);
@@ -1863,7 +1863,7 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
   free(facet_ijkmin);
   free(facet_ijkmax);
 
-}	  
+}
 
 /******************************* PARTICLE_POSITION ******************************/
 void pposition(double XMIN, double YMIN, double ZMIN, double XMAX, double YMAX, double ZMAX, struct particle_struct *pparticle, int ipart, int particle_surf)
@@ -1876,7 +1876,7 @@ void pposition(double XMIN, double YMIN, double ZMIN, double XMAX, double YMAX, 
   /*         XMIN = X-minimum domain boundary */
   /*         YMIN = Y-minimum domain boundary */
   /*         ZMIN = Z-minimum domain boundary */
-            
+
   /* Outputs: ppos = Particle position [x, y, z] [m] */
   /*          particle_surf = Surface where particle was generated */
   /*          ihatX = normal to that surface */
@@ -1899,25 +1899,25 @@ void pposition(double XMIN, double YMIN, double ZMIN, double XMAX, double YMAX, 
 
   if(particle_surf==0)
     particle->pos[0] = XMIN;
-  if(particle_surf==1) 
-    particle->pos[0] = XMAX; 
-  if(particle_surf==2) 
+  if(particle_surf==1)
+    particle->pos[0] = XMAX;
+  if(particle_surf==2)
     particle->pos[1] = YMIN;
-  if(particle_surf==3) 
+  if(particle_surf==3)
     particle->pos[1] = YMAX;
-  if(particle_surf==4) 
+  if(particle_surf==4)
     particle->pos[2] = ZMIN;
-  if(particle_surf==5) 
+  if(particle_surf==5)
     particle->pos[2] = ZMAX;
 
 }
-  
 
-/******************************* PARTICLE_VELOCITY **********************************/    
+
+/******************************* PARTICLE_VELOCITY **********************************/
 void pvelocity(double s[NSURF][NSPECIES], double Usurf[], int direction[], double Cmp[], int particle_surf, struct particle_struct *pparticle, int ipart, int species)
 {
 
-        
+
   /* Compute the proper velocity components for each particle based */
   /* on the surface and the bulk velocity vector. */
 
@@ -1928,7 +1928,7 @@ void pvelocity(double s[NSURF][NSPECIES], double Usurf[], int direction[], doubl
   /*         ihatX = normal to that surface */
   /*         ihatY = tangential component #1 to that surface */
   /*         ihatZ = tangential component #2 to that surface */
-            
+
   /* Outputs: pvel = Particle velocity vector [m/s]  */
   struct particle_struct *particle;
   int i;
@@ -1937,24 +1937,24 @@ void pvelocity(double s[NSURF][NSPECIES], double Usurf[], int direction[], doubl
   double qa, utemp;
   double ss;
   int ihat[3], ips, sp;
- 
+
   ips = particle_surf;
   sp = species;
 
   ss = s[ips][sp];
-    
+
   if(ips==0 || ips==1) {
     ihat[0] = 0;
     ihat[1] = 1;
     ihat[2] = 2;
   }
-      
+
   if(ips==2 || ips==3) {
     ihat[0] = 1;
     ihat[1] = 0;
     ihat[2] = 2;
   }
-  
+
   if(ips==4 || ips==5) {
     ihat[0] = 2;
     ihat[1] = 1;
@@ -1970,7 +1970,7 @@ void pvelocity(double s[NSURF][NSPECIES], double Usurf[], int direction[], doubl
   phi = 2.0*TPM_PI*ranf0(rr);
 
   /* COMPUTE VELOCITY VECTOR FROM MAXWELLIAN DISTRIBUTION */
- 
+
   un = -1.0;
   a = 1.0;
   fs1 = ss + sqrt(ss*ss + 2.0);
@@ -1983,15 +1983,15 @@ void pvelocity(double s[NSURF][NSPECIES], double Usurf[], int direction[], doubl
       un = utemp+ss;
       a = (2.0*un/fs1)*exp(fs2-utemp*utemp);
     }
-    particle->vel[ihat[0]] = direction[ips]*un*Cmp[sp]; 
-  }     
+    particle->vel[ihat[0]] = direction[ips]*un*Cmp[sp];
+  }
   else {
     particle->vel[ihat[0]] = direction[ips]*sqrt(-log(ranf0(rr)))*Cmp[sp];
   }
 
   a = sqrt(-log(ranf0(rr)));
   particle->vel[ihat[1]] = Usurf[ihat[1]] + a*Cmp[sp]*cos(phi);
-  particle->vel[ihat[2]] = Usurf[ihat[2]] + a*Cmp[sp]*sin(phi);  
+  particle->vel[ihat[2]] = Usurf[ihat[2]] + a*Cmp[sp]*sin(phi);
 
 }
 
@@ -2006,7 +2006,7 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
   /*         ipart = current particle       */
   /* 	      pcell = cell structure         */
 
-  /* Outputs: Cell numbers that the particle passes through */ 
+  /* Outputs: Cell numbers that the particle passes through */
 
   int i, j, k, m;
   int iside;
@@ -2045,14 +2045,14 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
   i = (cpos[0] - cell0->back)/(cell0->front - cell0->back);
   j = (cpos[1] - cell0->left)/(cell0->right - cell0->left);
   k = (cpos[2] - cell0->bottom)/(cell0->top - cell0->bottom);
-  
-  if(i==nc[0] && cpos[0] > ((cell0->back)+nc[0]*(cell0->front-cell0->back) - eps1) && 
+
+  if(i==nc[0] && cpos[0] > ((cell0->back)+nc[0]*(cell0->front-cell0->back) - eps1) &&
                  cpos[0] < ((cell0->back)+nc[0]*(cell0->front-cell0->back) + eps1))
     i--; /* Particle is on X-inclusive boundary */
   if(j==nc[1] && cpos[1] > ((cell0->left)+nc[1]*(cell0->right-cell0->left) - eps1) &&
                  cpos[1] < ((cell0->left)+nc[1]*(cell0->right-cell0->left) + eps1))
     j--; /* Particle is on Y-inclusive boundary */
-  if(k==nc[2] && cpos[2] > ((cell0->bottom)+nc[2]*(cell0->top-cell0->bottom) - eps1) && 
+  if(k==nc[2] && cpos[2] > ((cell0->bottom)+nc[2]*(cell0->top-cell0->bottom) - eps1) &&
                  cpos[2] < ((cell0->bottom)+nc[2]*(cell0->top-cell0->bottom) + eps1))
     k--; /* Particle is on Z-inclusive boundary */
 
@@ -2073,9 +2073,9 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
 
     /* Determine which neighboring cell the particles moves to */
     /* For now, simply do a static order: front, top, bottom, right, left, back */
- 
+
     xside[0] = cell->front;
-    xside[1] = cell->top; 
+    xside[1] = cell->top;
     xside[2] = cell->bottom;
     xside[3] = cell->right;
     xside[4] = cell->left;
@@ -2090,7 +2090,7 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
     ipar[5] = 0;
     iperp1[5] = 1;
     iperp2[5] = 2;
-  
+
     /* Top & Bottom */
     for(m=1; m<3; m++) {
       ipar[m] = 2;
@@ -2098,7 +2098,7 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
       iperp2[m] = 1;
     }
 
-    /* Left & Right */      
+    /* Left & Right */
     for(m=3; m<5; m++) {
       ipar[m] = 1;
       iperp1[m] = 0;
@@ -2108,11 +2108,11 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
     boundmin[0] = cell->back;
     boundmin[1] = cell->left;
     boundmin[2] = cell->bottom;
-    
+
     boundmax[0] = cell->front;
     boundmax[1] = cell->right;
     boundmax[2] = cell->top;
-    
+
     for(iside=0; iside<6; iside++) {
 
       a = (xside[iside] - cpos[ipar[iside]])/particle->vel[ipar[iside]];
@@ -2122,13 +2122,13 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
       if(a>0.0) {
 	if((ix1 > boundmin[iperp1[iside]]) && (ix1 <= boundmax[iperp1[iside]])) {
 	  if((ix2 > boundmin[iperp2[iside]]) && (ix2 <= boundmax[iperp2[iside]])) {
-	    
+
 	    /* Move the particle to the new position and cell */
 	    /* Use a small offset to ensure the particle isn't on the cell boundary */
 	    for(m=0; m<3; m++) {
 	      cpos[m] += (a+eps2)*particle->vel[m];
 	    }
-	    
+
 	    xflag = 1;
 	    if(iside==0) {
 	      i++;
@@ -2142,9 +2142,9 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
 	      j--;
 	    } else if(iside==5) {
 	      i--;
-	    } 
+	    }
 	    break;
-	    
+
 	  }
 	}
       }
@@ -2154,7 +2154,7 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
   } /* End while loop over domain */
 
 }
-  
+
 /******************************* COMPILE FACET LIST ***************************/
 void compile_facet_list(struct facet_struct *pfacet, int nfacets, struct cell_struct *pcell, int particle_cell_track[MAXCELLS], int *total_facet_list, int *fcount, int ipart) {
 
@@ -2165,7 +2165,7 @@ void compile_facet_list(struct facet_struct *pfacet, int nfacets, struct cell_st
   /*         nfacets = Number of facets */
   /*         pcell = Cell structure     */
   /*         Particle Cell Track        */
-  
+
   /* Outputs: Total Facet List          */
 
     /* DETERMINE THE FACETS TO LOOP THROUGH */
@@ -2200,7 +2200,7 @@ void compile_facet_list(struct facet_struct *pfacet, int nfacets, struct cell_st
        //if (icell>MAXCELLS){
        // printf("ERROR: icell was beyond MAXCELLS, this will crash...\n");
       // }
- 
+
 
        break;
      }
@@ -2239,8 +2239,8 @@ void compile_facet_list(struct facet_struct *pfacet, int nfacets, struct cell_st
 
 }
 
-/****************************** PATH_FACET_INTERSECTION ******************************/    
-void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_struct *pparticle, struct samp_struct *psample, int ipart, int particle_surf, int nfacets, struct cell_struct *pcell, int particle_cell_track[MAXCELLS], int *total_facet_list, int fcount) 
+/****************************** PATH_FACET_INTERSECTION ******************************/
+void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_struct *pparticle, struct samp_struct *psample, int ipart, int particle_surf, int nfacets, struct cell_struct *pcell, int particle_cell_track[MAXCELLS], int *total_facet_list, int fcount)
 {
 
   /* Determines which facet planes the particle path would intersect */
@@ -2253,7 +2253,7 @@ void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_stru
   /*         vertex3 = x, y, z positions of 3rd vertex */
   /*         pvel = Particle velocity vector [u, v, w] [m/s] */
   /*         ppos = Particle position [x, y, z] [m] */
-            
+
   /* Outputs: pvel = Particle velocity vector [m/s] */
   struct facet_struct *facet;
   struct particle_struct *particle;
@@ -2292,18 +2292,18 @@ void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_stru
     u[i] = 0.0;
     v[i] = 0.0;
   }
- 
+
   particle = pparticle + ipart;
 
 #if SAMPLE
   sample = psample + ipart;
 #endif /* SAMPLE */
-                           
-  /* DETERMINE WHETHER PATH OF THE PARTICLE INTERSECTS ANY OF THE FACETS */  
+
+  /* DETERMINE WHETHER PATH OF THE PARTICLE INTERSECTS ANY OF THE FACETS */
   /* LOOP ONLY OVER FACETS TO WHICH THE PARTICLE PASSED NEARBY */
 
   for(ifl=0; ifl<fcount; ifl++) {
-    
+
     fc = total_facet_list[ifl];
 
     facet = pfacet + fc;
@@ -2312,7 +2312,7 @@ void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_stru
       u[i] = facet->vertex2[i] - facet->vertex1[i];
       v[i] = facet->vertex3[i] - facet->vertex1[i];
     }
-  
+
     for(i=0; i<3; i++) {
       xvec[i] = particle->pos[i]-facet->vertex1[i];
     }
@@ -2325,7 +2325,7 @@ void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_stru
       singular[fc] = 1;
     }
     else {
-	
+
       singular[fc] = 0;
       r = a/b;
       intersection[fc] = r;
@@ -2333,24 +2333,24 @@ void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_stru
 	inside[fc] = 0;
       }
       else {
-	  
+
 	for(i=0; i<3; i++) {
 	  pixn[i] = particle->pos[i] + r*particle->vel[i];
 	}
-	  
+
 	uu = dot(u, u);
 	uv = dot(u, v);
 	vv = dot(v, v);
-	  
+
 	for(i=0; i<3; i++) {
 	  w[i] = pixn[i] - facet->vertex1[i];
 	}
-	
+
 	wu = dot(w, u);
 	wv = dot(w, v);
-	  
+
 	D = uv*uv - uu*vv;
-	  
+
 	s = (uv*wv - vv*wu)/D;
 	if(s < 0.0 || s > 1.0) {
 	  inside[fc] = 0;
@@ -2390,7 +2390,7 @@ void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_stru
     for(i=0; i<3; i++) {
       particle->pos[i] = particle->pos[i] + intersection[*min_fc]*particle->vel[i];
     }
-  } 
+  }
 
 #if SAMPLE
   if(*min_fc >=0 ) {
@@ -2399,8 +2399,8 @@ void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_stru
 #endif /* SAMPLE */
 
 }
-  
-/******************************** GAS_SURFACE_INTERACTION ******************************/    
+
+/******************************** GAS_SURFACE_INTERACTION ******************************/
 void gsi(struct particle_struct *pparticle, int ipart, struct facet_struct *pfacet, int min_fc, double Vw, double pveln[], int GSI_MODEL, double epsilon, double alpha, double alphan, double sigmat)
 {
 
@@ -2416,7 +2416,7 @@ void gsi(struct particle_struct *pparticle, int ipart, struct facet_struct *pfac
   /*         vertex1 = x, y, z positions of 1st vertex */
   /*         vertex2 = x, y, z positions of 2nd vertex */
   /*         vertex3 = x, y, z positions of 3rd vertex */
-            
+
   /* Outputs: pveln = Reflected particle velocity vector */
   /*          in domain coordinate system [m/s] */
 
@@ -2446,7 +2446,7 @@ void gsi(struct particle_struct *pparticle, int ipart, struct facet_struct *pfac
   }
 
   norm = sqrt(norm);
-   
+
   /* COMPUTE TANGENTIAL VECTOR */
   for(i=0; i<3; i++) {
     nvec[i] = facet->normal[i];
@@ -2459,7 +2459,7 @@ void gsi(struct particle_struct *pparticle, int ipart, struct facet_struct *pfac
   pvelf[0] = particle->vel[0]*nvec[0]  + particle->vel[1]*nvec[1]  + particle->vel[2]*nvec[2];
   pvelf[1] = particle->vel[0]*t1vec[0] + particle->vel[1]*t1vec[1] + particle->vel[2]*t1vec[2];
   pvelf[2] = particle->vel[0]*t2vec[0] + particle->vel[1]*t2vec[1] + particle->vel[2]*t2vec[2];
-  
+
   if(GSI_MODEL == 0) { /* MAXWELL'S MODEL */
     maxwell(pvelf, pvelr, Vw, epsilon);
   }
@@ -2469,7 +2469,7 @@ void gsi(struct particle_struct *pparticle, int ipart, struct facet_struct *pfac
   else if(GSI_MODEL == 2) { /* CLL MODEL */
     cll(pvelf, pvelr, Vw, GSI_MODEL, alphan, sigmat, alpha);
   }
- 
+
   /* CONVERT VELOCITIES BACK TO THEIR ORIGINAL COORDINATE FRAME */
   pveln[0] = pvelr[0]*nvec[0] + pvelr[1]*t1vec[0] + pvelr[2]*t2vec[0];
   pveln[1] = pvelr[0]*nvec[1] + pvelr[1]*t1vec[1] + pvelr[2]*t2vec[1];
@@ -2478,7 +2478,7 @@ void gsi(struct particle_struct *pparticle, int ipart, struct facet_struct *pfac
 }
 
 
-/********************************* MAXWELL'S MODEL *********************************/      
+/********************************* MAXWELL'S MODEL *********************************/
 void maxwell(double pvelf[], double pvelr[], double Vw, double epsilon)
 {
 
@@ -2487,15 +2487,15 @@ void maxwell(double pvelf[], double pvelr[], double Vw, double epsilon)
   /* Inputs: pvelf = Particle velocity vector in facet plane frame [u, v, w] [m/s] */
   /*         epsilon = Fraction of particles specularly reflected */
   /*         Vw = Wall velocity [m/s] */
-            
+
   /* Outputs: pvelr = Reflected particle velocity vector in facet plane frame [m/s] */
-  
+
   double phi;
   double a;
   int i;
-   
+
   if(ranf0(rr) > epsilon) { /* DIFFUSE */
-      
+
     pvelr[0] = sqrt(-log(ranf0(rr)))*Vw;
     phi = 2.0*TPM_PI*ranf0(rr);
     a = sqrt(-log(ranf0(rr)));
@@ -2510,7 +2510,7 @@ void maxwell(double pvelf[], double pvelr[], double Vw, double epsilon)
 
 }
 
-/************************* DIFFUSE REFLECTION WITH INCOMPLETE ACCOMMODATION **********************/      
+/************************* DIFFUSE REFLECTION WITH INCOMPLETE ACCOMMODATION **********************/
 void dria(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alpha, double alphan, double sigmat)
 {
 
@@ -2520,7 +2520,7 @@ void dria(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alpha
   /* Inputs: pvelf = Particle velocity vector in facet plane frame [u, v, w] [m/s] */
   /*         alpha = Energy Accommodation Coefficient */
   /*         Vw = Wall velocity [m/s] */
-            
+
   /* Outputs: pvelr = Reflected particle velocity vector in facet plane frame [m/s] */
 
   double pvu[3];
@@ -2534,9 +2534,9 @@ void dria(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alpha
   }
 
   cll(pvelf, pvelr, Vw, GSI_MODEL, alphan, sigmat, alpha);
-    
+
   Vtot = sqrt(dot(pvelr, pvelr));
-    
+
   /* RESELECT VELOCITY COMPONENTS FROM COSINE DISTRIBUTION */
   phi = 2.0*TPM_PI*ranf0(rr);
   theta = asin(sqrt(ranf0(rr)));
@@ -2547,8 +2547,8 @@ void dria(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alpha
 }
 
 
-/*********************** CERCIGNANI-LAMPIS-LORD MODEL *****************************/       
-void cll(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alphan, double sigmat, double alpha) 
+/*********************** CERCIGNANI-LAMPIS-LORD MODEL *****************************/
+void cll(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alphan, double sigmat, double alpha)
 {
 
   /* Computes the velocity transformation according to the */
@@ -2558,7 +2558,7 @@ void cll(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alphan
   /*         alphan = Normal Energy Accommodation Coefficient */
   /*         sigmat = Tangential Momentum Accommodation Coefficient */
   /*         Vw = Wall velocity [m/s] */
-            
+
   /* Outputs: pvelr = Reflected particle velocity vector in facet plane frame [m/s] */
 
   double pvelt[3];
@@ -2575,12 +2575,12 @@ void cll(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alphan
   for(i=0; i<3; i++) {
     pvelt[i] = pvelf[i]/Vw;
   }
-  
-  if(GSI_MODEL==1) 
+
+  if(GSI_MODEL==1)
     an = alpha;
-  else 
+  else
     an = alphan;
-  
+
   delta = atan2(pvelt[2],pvelt[1]);
   Vtang = sqrt(pvelt[1]*pvelt[1]+pvelt[2]*pvelt[2]);
   r = sqrt(-an*log(ranf0(rr)));
@@ -2588,11 +2588,11 @@ void cll(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alphan
   W = pvelt[0]*sqrt(1.0-an);
   pvelr[0] = sqrt(r*r+W*W+2.0*r*W*cos(theta));
 
-  if(GSI_MODEL==1) 
-    at = alpha;   
-  else 
+  if(GSI_MODEL==1)
+    at = alpha;
+  else
     at = sigmat*(2.0-sigmat);
-      
+
   r = sqrt(-at*log(ranf0(rr)));
   theta = 2.0*TPM_PI*ranf0(rr);
   W = Vtang*sqrt(1.0-at);
@@ -2609,7 +2609,7 @@ void cll(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alphan
 }
 
 
-/********************************* COMPUTE_CD *************************************/    
+/********************************* COMPUTE_CD *************************************/
 double compute_Cd(double Umag, double theta, double phi, double Fx, double Fy, double Fz, double proj_area, double n, double m_avg)
 {
 
@@ -2625,7 +2625,7 @@ double compute_Cd(double Umag, double theta, double phi, double Fx, double Fy, d
   /*         proj_area = Projected Area of the Object [m^2]     */
   /*         n = Atmospheric number density [m^-3]              */
   /*         m_avg = Average mass of real particles             */
-            
+
   /* Outputs: Cd = Drag coefficient of the object */
 
   double Cnorm, Caxial;
@@ -2642,7 +2642,7 @@ double compute_Cd(double Umag, double theta, double phi, double Fx, double Fy, d
 
 /*********************************** DOT PRODUCT *************************************/
 double dot(double V[], double W[]) {
-   
+
   /* Computes dot product between vectors V and W */
   /* Inputs: V = Vector #1 [Vx, Vy, Vz] */
   /*         W = Vector #2 [Wx, Wy, Wz] */
@@ -2678,4 +2678,4 @@ double ranf0(gsl_rng *rr)
 {
   return gsl_rng_uniform_pos (rr);
 }
- 
+
