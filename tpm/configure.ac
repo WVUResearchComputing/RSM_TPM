@@ -17,6 +17,11 @@ then
    CFLAGS="-Wall"
 fi
 
+#if test -z "$CXXFLAGS"
+#then
+#   CXXFLAGS="-Wall "
+#fi
+
 # ------------------------------------------------------------------------------
 # Dummy headline formater
 # ------------------------------------------------------------------------------
@@ -28,14 +33,18 @@ AC_DEFUN([CONFIGURE_HEADLINE],
 # ------------------------------------------------------------------------------
 # Checks for tool support
 # ------------------------------------------------------------------------------
-CONFIGURE_HEADLINE([ C support ])
+CONFIGURE_HEADLINE([ C compiler ])
 AC_PROG_CC
+#CONFIGURE_HEADLINE([ C++ compiler ])
+#AC_PROG_CXX
+#CONFIGURE_HEADLINE([ Libtool ])
+#AC_PROG_LIBTOOL
 
 # ------------------------------------------------------------------------------
 # Checks for C/C++ support
 # ------------------------------------------------------------------------------
-CONFIGURE_HEADLINE([ C compiler ])
 AC_LANG([C])
+#AC_LANG([C++])
 
 # ------------------------------------------------------------------------------
 # Provides debug and release compilation modes
@@ -108,14 +117,17 @@ AM_CONDITIONAL(USE_MPI, test "$enable_mpi" = "yes")
 # try to find if we are using OpenMPI / MPICH by looking inside mpi.h
 AS_IF([test "$enable_mpi" = "yes"],
 	[
+		sav_CC=$CC
 		sav_CXX=$CXX
 		sav_CXXFLAGS=$CXXFLAGS
+		CC=$MPICC
 		CXX=$MPICXX
 		CXXFLAGS="$CXXFLAGS"
 		AC_CHECK_DECL([OPEN_MPI], [mpi_vendor="OpenMPI"],
 		[], [#include "mpi.h"])
 		AC_CHECK_DECL([MPICH_VERSION], [mpi_vendor="MPICH"],
 		[], [#include "mpi.h"])
+		CC=$sav_CC
 		CXX=$sav_CXX
 		CXXFLAGS=$sav_CXXFLAGS
 	])
@@ -164,13 +176,13 @@ fi
 AC_SUBST(MPI_CXXFLAGS)
 AC_SUBST(MPI_LDFLAGS)
 
+# MPI Macro
+#AX_MPI()
 if test "$enable_mpi" = "yes"
 then
      CC=$MPICC
 fi
 
-# MPI Macro
-#AX_MPI()
 
 # ------------------------------------------------------------------------------
 #    Check for GSL support
@@ -215,7 +227,7 @@ AC_MSG_RESULT([
 	* gprof profiler enabled : $gprof_enabled ($gprof_compiler)
 	* HDF5 LDFLAGS           : $HDF5_LDFLAGS
 	* HDF5 LIBS              : $HDF5_LIBS
-	* MPI enabled            : $enable_mpi (vendor $mpi_vendor)
+	* MPI enabled            : $enable_mpi ($mpi_vendor)
 
 	* LDFLAGS                : $LDFLAGS
 	* LIBS                   : $LIBS

@@ -76,4 +76,15 @@ tpm/tests/Makefile
 tpm/tests/test-suite.log
 tpm/tests/tpm_test.sh.log
 tpm/tests/tpm_test.sh.trs
+tpm/config.guess
+tpm/config.sub
+tpm/libtool
+tpm/ltmain.sh
+tpm/m4/libtool.m4
+tpm/m4/ltoptions.m4
+tpm/m4/ltsugar.m4
+tpm/m4/ltversion.m4
+tpm/m4/lt~obsolete.m4
+tpm/test.c
+tpm/test_mpich.c
 
