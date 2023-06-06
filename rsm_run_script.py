@@ -378,7 +378,6 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logo()
 
-    exit(1)
     print("Surface Model Simulation")
 
     parser = argparse.ArgumentParser(description='Response Surface Model')
