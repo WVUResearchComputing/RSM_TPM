@@ -32,9 +32,9 @@
 #include "tpm.h"
 #include "../config.h"
 
-#if PARALLEL
+#if HAVE_MPI
 #include "mpi.h"
-#endif /* PARALLEL */
+#endif /* HAVE_MPI */
 
 gsl_rng * rr;
 gsl_rng *rrr;
@@ -42,16 +42,16 @@ gsl_rng *rrr;
 long int seed;
 int nProcs;
 
-#if PARALLEL
+#if HAVE_MPI
 int rank;
 MPI_Comm io_comm;
-#endif /* PARALLEL */
+#endif /* HAVE_MPI */
 
 
 
 int main(int argc, char *argv[]) {
 
-#if PARALLEL
+#if HAVE_MPI
     /***************************** MPI Initialization *******************************/
     /* Initialize MPI */
     MPI_Init(&argc, &argv);
@@ -62,8 +62,8 @@ int main(int argc, char *argv[]) {
     /* Find the total number of procs */
     MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
 
-    double CdT;
-#endif /* PARALLEL */
+    //GAF:UNUSED double CdT;
+#endif /* HAVE_MPI */
 
     /************************** Random Number Generator Setup *******************/
     const gsl_rng_type *T;
@@ -71,11 +71,11 @@ int main(int argc, char *argv[]) {
     T = gsl_rng_default;
     rr = gsl_rng_alloc(T);
 #if DYNAMIC_SEED
-#if PARALLEL
+#if HAVE_MPI
     seed = time(NULL) * (rank + 1);
-#else /* PARALLEL */
+#else /* HAVE_MPI */
     seed = time (NULL);
-#endif /*PARALLEL */
+#endif /*HAVE_MPI */
 #else /* DYNAMIC SEED */
     seed = 0;
 #endif /* DYNAMIC SEED */
@@ -84,14 +84,14 @@ int main(int argc, char *argv[]) {
 
     double Cd;
     char outfilename[1024];
-    char areaoutfilename[1024];
+    char areaoutfilename[2048];
     char filename[1024];
-    char objname[1024];
-    char deflection[1024];
-    char tempdeflection[1024];
+    char objname[512];
+    //GAF:UNUSED char deflection[1024];
+    //GAF:UNUSED char tempdeflection[1024];
     char areafilename[1024];
 
-#if PARALLEL
+#if HAVE_MPI
     /************* Set up number of 0 to use before processor number ****************/
     char *zeros = "p";
     if (nProcs > 9) {
@@ -104,22 +104,22 @@ int main(int argc, char *argv[]) {
             zeros = "p0";
         }
     }
-#endif /*PARALLEL*/
+#endif /*HAVE_MPI*/
 
 
     char line[1024];
-#if PARALLEL
+#if HAVE_MPI
     sprintf(outfilename, "tempfiles/Cdout_%s%d.dat", zeros, rank);
-#else /* PARALLEL */
+#else /* HAVE_MPI */
     sprintf(outfilename, "tempfiles/Cdout.dat");
-#endif /* PARALLEL */
+#endif /* HAVE_MPI */
 
     FILE *fout = fopen(outfilename, "w");
     if (fout == NULL) {
         printf("Error opening %s\n", outfilename);
         exit(1);
     }
-#if PARALLEL
+#if HAVE_MPI
     FILE *ftot = fopen("tempfiles/Cdout.dat", "w");
     FILE *ftota = fopen("Outputs/Projected_Area/Aout.dat","w");
     if (ftot == NULL) {
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
         printf("Error opening %s\n", "Outputs/Projected_Area/Aout.dat");
         exit(1);
     }
-#endif /* PARALLEL */
+#endif /* HAVE_MPI */
 
     double X[NSPECIES] = {1.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     int GSI_MODEL = 0;
@@ -139,11 +139,13 @@ int main(int argc, char *argv[]) {
     int NCOMP = 0;
     int NVAR = 0;
 
-#if PARALLEL
+#if HAVE_MPI
     int ppN; // Particles per processor
-#endif /* PARALLEL */
+#else
+    int pc;
+#endif /* HAVE_MPI */
 
-    int pc, iTOT;
+    int iTOT;
 
     /* READ IN ENSEMBLE PARAMETERS */
     read_input(objname, X, &GSI_MODEL, &ROTATION_FLAG);
@@ -156,7 +158,9 @@ int main(int argc, char *argv[]) {
     herr_t status;
     hsize_t dims[2];
 
-    int i, j, k, ndims;
+    int i, j;
+    //GAF:UNUSED  int k;
+    int ndims;
     double **rdata;
 
     //printf("Opening HDF5 tpm.ensemble.h5... \n");
@@ -275,7 +279,7 @@ int main(int argc, char *argv[]) {
 
    }
 
-#if PARALLEL
+#if HAVE_MPI
   if (NUM_POINTS%nProcs==0) {
      ppN = NUM_POINTS/nProcs;
      if(rank==0) {
@@ -287,10 +291,9 @@ int main(int argc, char *argv[]) {
     printf("ERROR: The number of points is not integer divisible by the number MPI processes");
     exit(1);
   }
-#endif /* PARALLEL */
+#endif /* HAVE_MPI */
 
-
-#if PARALLEL
+#if HAVE_MPI
 
   /* Output filename for error diagnostics */
   char *speciesname, istr[3]; // BAD IDEA, limited to 999
@@ -316,11 +319,7 @@ int main(int argc, char *argv[]) {
   }
   //fprintf(farea,"Projected Area of Satellite \n");
 
-
-
-
   for(i=rank*ppN; i<(rank+1)*ppN; i++) {
-
 
     // If rotation is being performed, then the appropriate filename must be read
     if(ROTATION_FLAG == 2){
@@ -332,8 +331,6 @@ int main(int argc, char *argv[]) {
     strcpy(filename,objname);
     }  // Otherwise use the objectname as the filename
     printf("I am rank %d, computing case %d : %s\n",rank,i, filename);
-
-
 
     iTOT=0;
     if(rank==0) {
@@ -370,8 +367,9 @@ int main(int argc, char *argv[]) {
       } //Serial loop end
 
   }
-#else /* PARALLEL */
+#else /* HAVE_MPI */
 
+  FILE *farea;
   //printf("Loop on NUM_POINTS\n");
   sprintf(filename,"%s",objname);
   for(i=0; i<NUM_POINTS; i++) {    // Parallel Loop
@@ -405,11 +403,11 @@ int main(int argc, char *argv[]) {
   }
 
 
-#endif /* PARALLEL */
+#endif /* HAVE_MPI */
 
   fclose(fout);
   fclose(farea);
-#if PARALLEL
+#if HAVE_MPI
   //printf("[rank=%d] MPI Barrier\n", rank);
   MPI_Barrier(MPI_COMM_WORLD);
 
@@ -433,12 +431,12 @@ int main(int argc, char *argv[]) {
 
      while(!feof(fout)) {
 	     if(fgets(line, 1024, fout)) {
-	          fprintf(ftot, line);
+	          fprintf(ftot, "%s", line);
          }
      }
     while(!feof(farea)) {
          if(fgets(line,1024,farea)){
-             fprintf(ftota,line);
+             fprintf(ftota, "%s", line);
          }
       }
 
@@ -449,7 +447,7 @@ int main(int argc, char *argv[]) {
     fclose(ftota);
   }
 
-#endif /* PARALLEL */
+#endif /* HAVE_MPI */
 
 
   free(LHS_Umag);
@@ -467,15 +465,15 @@ int main(int argc, char *argv[]) {
 
   gsl_rng_free(rr);
 
-#if PARALLEL
+#if HAVE_MPI
   MPI_Finalize();
-#endif /* PARALLEL */
+#endif /* HAVE_MPI */
 
-#if PARALLEL
+#if HAVE_MPI
   if(rank==0) {
     printf("Simulation complete\n");
   }
-#endif /* PARALLEL */
+#endif /* HAVE_MPI */
 
   return(0);
 
@@ -501,7 +499,7 @@ void read_input(char objname[1024], double X[], int *GSI_MODEL, int *ROTATION_FL
   char line[1024];
   char *temp;
   char *data;
-  int i;
+  //GAF:UNUSED int i;
 
 
   /* MESH OBJECT NAME */
@@ -569,14 +567,14 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 #endif /* SAMPLE */
 
   struct particle_struct *particle;
-  struct cell_struct *cell;
+  //GAF:UNUSED struct cell_struct *cell;
 
   int i, j, k, ipart, species;
   int particle_surf = 0;
   int nfacets = 0;
   int min_fc = -1;
   int scount = 0;
-  int temp;
+  //GAF:UNUSED int temp;
   int pcounter[NSURF][NSPECIES];
   int spcounter[NSPECIES];
   int surfcounter[NSURF];
@@ -589,7 +587,8 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
   double Cd;
   double pveln[3], dF[3];
 
-  double r1, r2;
+  //GAF:UNUSED double r1;
+  double r2;
 
 /* INITIALIZE MIN AND MAX POSITIONS FOR EACH DIMENSION */
   double XMIN = 0.0;
@@ -639,9 +638,9 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
   double Vw;                                         /* WALL SPEED [m/s] */
   double Cmp[NSPECIES];                              /* MOST PROBABLE SPEED [m/s] */
 
-  double surf_temp;
+  //GAF:UNUSED double surf_temp;
 
-  int cell_number;
+  //GAF:UNUSED int cell_number;
   int nc[3] = {0, 0, 0};
   int particle_cell_track[MAXCELLS];
 
@@ -740,11 +739,11 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 
   for(ipart=0; ipart<NPART; ipart++) {
 
-    //#if !PARALLEL
+    //#if !HAVE_MPI
     /* if(ipart % (int)update_step == 0) { */
     /*  printf("%3.0lf percent complete\n", 100.0*((double)ipart/(double)NPART)); */
     /* } */
-    //#endif /* !PARALLEL */
+    //#endif /* !HAVE_MPI */
 
     if (ipart%100000==0) printf(">>>%s<<<  Particle No %d\n", filename, ipart);
 
@@ -1069,8 +1068,8 @@ double projected_area(double XMIN, double YMIN, double ZMIN, double XMAX, double
 
   struct facet_struct *facet;
   double proj_area = 0.0;
-  double v[3];
-  double Umag = sqrt(Ux*Ux+Uy*Uy+Uz*Uz);
+  //GAF: UNUSED double v[3];
+  //GAF: UNUSED double Umag = sqrt(Ux*Ux+Uy*Uy+Uz*Uz);
   double theta, phi;
   double **fv1, **fv2, **fv3;
   double transform[3][3];
@@ -1476,7 +1475,8 @@ void domain_boundary(double *XMIN, double *YMIN, double *ZMIN, double *XMAX, dou
 /***************************** MAX FACET DIMENSION ******************************/
 void max_facet_dimension(double XMIN, double YMIN, double ZMIN, double XMAX, double YMAX, double ZMAX, struct facet_struct *pfacet, int nfacets, int nc[3]) {
 
-  int i, j, k, m;
+  //GAF: UNUSED int i, j, k;
+  int m;
   int ifacet;
   double fmax[3];
   struct facet_struct *facet;
@@ -1588,7 +1588,7 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
   int counter;
   int cell_number;
   int total_counter = 0;
-  int sum = 0;
+  //GAF: UNUSED int sum = 0;
   int *facet_af = NULL;
   int *facet_overlaps = NULL;
   double ***facet_ijk = NULL;
@@ -2020,7 +2020,7 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
   double cpos[3]; /* Current particle position */
   double eps1 = 2.0e-15;
   double eps2 = 1.0e-15;
-  int diff;
+  //GAF: UNUSED int diff;
 
   double xside[6], boundmin[3], boundmax[3];
   int ipar[6], iperp1[6], iperp2[6];
@@ -2172,7 +2172,7 @@ void compile_facet_list(struct facet_struct *pfacet, int nfacets, struct cell_st
   int icell = 0;
   int ipf, cell_number;
   int i;
-  int ifl, ifl2;
+  //GAF: UNUSED int ifl, ifl2;
 
   struct cell_struct *cell;
 
@@ -2257,7 +2257,7 @@ void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_stru
   /* Outputs: pvel = Particle velocity vector [m/s] */
   struct facet_struct *facet;
   struct particle_struct *particle;
-  struct cell_struct *cell;
+  //GAF: UNUSED struct cell_struct *cell;
 #if SAMPLE
   struct samp_struct *sample;
 #endif /* SAMPLE */
@@ -2275,11 +2275,12 @@ void pf_intercept(int *min_fc, struct facet_struct *pfacet, struct particle_stru
   double D;
   double pixn[3];
   int i, fc;
-  int icell, ipf, ifl;
-  int cell_number;
+  //GAF:UNUSED int icell, ipf;
+  int ifl;
+  //GAF:UNUSED int cell_number;
   double min_int;
   double rndoff = 1.0e-15;
-  int ifl2;
+  //GAF: UNUSED int ifl2;
 
   for(i=0; i<nfacets; i++) {
     inside[i] = 0;
@@ -2492,7 +2493,7 @@ void maxwell(double pvelf[], double pvelr[], double Vw, double epsilon)
 
   double phi;
   double a;
-  int i;
+  //GAF:UNUSED int i;
 
   if(ranf0(rr) > epsilon) { /* DIFFUSE */
 
@@ -2664,7 +2665,7 @@ void cross(double V[], double W[], double VEC[]) {
 
   /* Output: b = Cross Product of V and W */
 
-  int i;
+  //GAF:UNUSED int i;
 
   VEC[0] = V[1]*W[2] - V[2]*W[1];
   VEC[1] = V[2]*W[0] - V[0]*W[2];

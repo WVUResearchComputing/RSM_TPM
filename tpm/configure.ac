@@ -164,6 +164,11 @@ fi
 AC_SUBST(MPI_CXXFLAGS)
 AC_SUBST(MPI_LDFLAGS)
 
+if test "$enable_mpi" = "yes"
+then
+     CC=$MPICC
+fi
+
 # MPI Macro
 #AX_MPI()
 
@@ -187,10 +192,6 @@ AC_MSG_RESULT([$HDF5_LDFLAGS $HDF5_LIBS])
 LIBS="$LIBS $HDF5_LIBS"
 LDFLAGS="$LDFLAGS $HDF5_LDFLAGS"
 CPPFLAGS="$CPPFLAGS $HDF5_CPPFLAGS"
-
-# Setting all to CC and CFLAGS
-CC=$MPICC
-#CFLAGS="$CFLAGS $LDFLAGS $LIBS"
 
 # ------------------------------------------------------------------------------
 # Declares output files

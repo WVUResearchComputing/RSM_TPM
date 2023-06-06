@@ -52,6 +52,7 @@ Mkfile.old
 dkms.conf
 
 # Ignore Autotools generated files
+__pycache__/
 *Makefile.in
 tpm/aclocal.m4
 tpm/autom4te.cache
@@ -62,4 +63,17 @@ tpm/depcomp
 tpm/install-sh
 tpm/missing
 tpm/test-driver
+tpm/Makefile
+tpm/config.h
+tpm/config.h.in~
+tpm/config.log
+tpm/config.status
+tpm/src/.deps/
+tpm/src/Makefile
+tpm/src/tpm
+tpm/stamp-h1
+tpm/tests/Makefile
+tpm/tests/test-suite.log
+tpm/tests/tpm_test.sh.log
+tpm/tests/tpm_test.sh.trs
 
