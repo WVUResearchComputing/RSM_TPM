@@ -1,9 +1,5 @@
 # Response Surface Model + Test Particle Model (RSM+TPM)
 
-RSM+TPM is a code written in Python and C
-
-RSM is written in Python and TPM is written in C
-
 ## Test Particle Model
 
 The Test Particle Model (TPM) is written in C and uses MPI and some extra libraries.
@@ -21,7 +17,7 @@ To install these dependencies you can use the packages provided by your Linux di
 For example on Ubuntu focal the dependencies above can be satisfied executing the command:
 
 ```
-	sudo apt-get install build-essential git autoconf libgsl-dev libhdf5-dev libmpich-dev
+sudo apt-get install build-essential git autoconf libgsl-dev libhdf5-dev libmpich-dev
 ```
 
 ## Response Surface Model
@@ -39,14 +35,14 @@ You can install these dependencies using the packages on the Linux distribution.
 On Ubuntu focal you can install most dependencies executing the command:
 
 ```
-	sudo apt-get install python3 python3-numpy python3-matplotlib python3-pandas python3-sklearn python3-pip
+sudo apt-get install python3 python3-numpy python3-matplotlib python3-pandas python3-sklearn python3-pip
 ```
 
 An exception  here is h5py. The package provided by Ubuntu depends on OpenMPI.
 To install the serial version use pip:
 
 ```
-	sudo python3 -m pip install h5py
+sudo python3 -m pip install h5py
 ```
 
 ## Cloning the repository
