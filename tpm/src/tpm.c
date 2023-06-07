@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     char outfilename[1024];
     char areaoutfilename[2048];
     char filename[1024];
-    char objname[512];
+    char objname[1024];
     //GAF:UNUSED char deflection[1024];
     //GAF:UNUSED char tempdeflection[1024];
     char areafilename[1024];
@@ -150,10 +150,7 @@ int main(int argc, char *argv[]) {
     /* READ IN ENSEMBLE PARAMETERS */
     read_input(objname, X, &GSI_MODEL, &ROTATION_FLAG);
 
-
-
-/*     Read HDF5 file      */
-
+    /*     Read HDF5 file      */
     hid_t file_id, dataset_id, space_id; /* identifiers */
     herr_t status;
     hsize_t dims[2];
@@ -174,7 +171,8 @@ int main(int argc, char *argv[]) {
     space_id = H5Dget_space(dataset_id);
     ndims = H5Sget_simple_extent_dims(space_id, dims, NULL);
 
-    printf("Dims: %llu %llu\n", dims[0], dims[1]);
+    printf("Number Dimensions: %d\n", ndims);
+    printf("Dims: %llu %llu\n", (long long unsigned int)dims[0], (long long unsigned int)dims[1]);
 
     /*Allocate array of pointers to rows*/
     rdata = (double **) malloc(dims[0] * sizeof(double *));
@@ -189,6 +187,7 @@ int main(int argc, char *argv[]) {
 
     /*Read the data using the default properties*/
     status = H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata[0]);
+    if (status != 0) printf("Error in HDF5\n");
 
     //printf("%o \n", rdata[0]);
     //for (i=0; i<dims[1]; i++)
@@ -197,12 +196,15 @@ int main(int argc, char *argv[]) {
 
     /* Close the space */
     status = H5Sclose(space_id);
+    if (status != 0) printf("Error in HDF5\n");
 
     /* Close the dataset */
     status = H5Dclose(dataset_id);
+    if (status != 0) printf("Error in HDF5\n");
 
     /* Close the file */
     status = H5Fclose(file_id);
+    if (status != 0) printf("Error in HDF5\n");
 
     NUM_POINTS = dims[0]; //number of rows in tpm.ensemble.h5
     NVAR = dims[1]; //number of columns in tpm.ensemble.h5
@@ -217,7 +219,7 @@ int main(int argc, char *argv[]) {
     double *LHS_Umag, *LHS_theta, *LHS_phi, *LHS_Ts, *LHS_Ta, *LHS_An, *LHS_St, *LHS_Al, *LHS_Ep;
     double **Comp_Deflec;
     double area;
-    int ncols;
+    int ncols=1;
     LHS_Umag = (double *) calloc(NUM_POINTS, sizeof(double));
     LHS_theta = (double *) calloc(NUM_POINTS, sizeof(double));
     LHS_phi = (double *) calloc(NUM_POINTS, sizeof(double));
@@ -310,6 +312,7 @@ int main(int argc, char *argv[]) {
   } else { /* Atomic Hydrogen */
     speciesname = "H";
   }
+  printf("SpeciesName: %s\n", speciesname);
   sprintf(areafilename, "Outputs/Projected_Area/area_%s_%s%d.dat", objname,zeros,rank);
   FILE *farea = fopen(areafilename, "w");
   if(farea == NULL)
@@ -497,31 +500,31 @@ void read_input(char objname[1024], double X[], int *GSI_MODEL, int *ROTATION_FL
   }
 
   char line[1024];
-  char *temp;
+  //char *temp;
   char *data;
   //GAF:UNUSED int i;
 
 
   /* MESH OBJECT NAME */
   fgets(line, 1024, f);
-  temp = strtok(line, "#");
+  //temp = strtok(line, "#");
   data = strtok(NULL, "#");
   sscanf(data, "%s\n", objname);
 
   /* GAS SURFACE INTERACTION MODEL */
   fgets(line, 1024, f);
-  temp = strtok(line, "#");
+  //temp = strtok(line, "#");
   data = strtok(NULL, "#");
   sscanf(data, "%d\n", GSI_MODEL);
 
   /* SPECIES MOLE FRACTIONS X = [O, O2, N, N2, He, H] */
   fgets(line, 1024, f);
-  temp = strtok(line, "#");
+  //temp = strtok(line, "#");
   data = strtok(NULL, "#");
   sscanf(data, "%lf %lf %lf %lf %lf %lf\n", &X[0], &X[1], &X[2], &X[3], &X[4], &X[5]);
 
   fgets(line, 1024, f);
-  temp = strtok(line, "#");
+  //temp = strtok(line, "#");
   data = strtok(NULL, "#");
   sscanf(data, "%d\n", ROTATION_FLAG);
 
@@ -569,15 +572,15 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
   struct particle_struct *particle;
   //GAF:UNUSED struct cell_struct *cell;
 
-  int i, j, k, ipart, species;
+  int i, j, k, ipart, species=0;
   int particle_surf = 0;
   int nfacets = 0;
   int min_fc = -1;
   int scount = 0;
   //GAF:UNUSED int temp;
   int pcounter[NSURF][NSPECIES];
-  int spcounter[NSPECIES];
-  int surfcounter[NSURF];
+  //int spcounter[NSPECIES];
+  //int surfcounter[NSURF];
   double sflux[NSURF];
   double tsflux[NSURF];
   double spflux[NSPECIES];
@@ -646,7 +649,7 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
 
   int *total_facet_list;
   int fcount = 0;
-  double update_step;
+  //double update_step;
 
 /* DETERMINE NUMBER OF FACETS FROM MESH FILE */
   nfacets = read_num_lines(filename);
@@ -735,7 +738,7 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
     cumul_dist[k] = cumul_dist[k-1] + surf_flux[i][j]/tot_flux;
   }
 
-  update_step = (double)NPART/100.0;
+  //update_step = (double)NPART/100.0;
 
   for(ipart=0; ipart<NPART; ipart++) {
 
@@ -847,12 +850,12 @@ double testparticle(char filename[1024], double Umag, double theta, double phi, 
   sample_write(iTOT, psample);
 #endif /* SAMPLE */
 
-  for(j=0; j<NSPECIES; j++) {
-    spcounter[j] = 0;
-  }
+//  for(j=0; j<NSPECIES; j++) {
+//    spcounter[j] = 0;
+//  }
 
   for(i=0; i<NSURF; i++) {
-    surfcounter[i] = 0;
+//    surfcounter[i] = 0;
     sflux[i] = 0.0;
   }
 
@@ -953,11 +956,11 @@ void facet_properties(char filename[1024], double Ux, double Uy, double Uz, int 
   char *vert2x, *vert2y, *vert2z;
   char *vert3x, *vert3y, *vert3z;
   char *normx, *normy, *normz;
-  char *temp;
+  //char *temp;
   int HeaderSize = 1;
   int i, ifacet;
 
-  double v[3];
+  //double v[3];
   double dist1[3], dist2[3];
   double tc[3];
 
@@ -974,8 +977,8 @@ void facet_properties(char filename[1024], double Ux, double Uy, double Uz, int 
   for(ifacet=0; ifacet<nfacets; ifacet++) {
     /* Read the first line and assign normal components */
     fgets(line1, 1024, f);
-    temp = strtok(line1, " ");
-    temp = strtok(NULL, " ");
+    //temp = strtok(line1, " ");
+    //temp = strtok(NULL, " ");
     normx = strtok(NULL, " ");
     normy = strtok(NULL, " ");
     normz = strtok(NULL, " ");
@@ -983,19 +986,19 @@ void facet_properties(char filename[1024], double Ux, double Uy, double Uz, int 
     fgets(line2, 1024, f);
     /* Read the third line and assign vertex #1 position */
     fgets(line3, 1024, f);
-    temp = strtok(line3, " ");
+    //temp = strtok(line3, " ");
     vert1x = strtok(NULL, " ");
     vert1y = strtok(NULL, " ");
     vert1z = strtok(NULL, " ");
     /* Read the fourth line and assign vertex #2 position */
     fgets(line4, 1024, f);
-    temp = strtok(line4, " ");
+    //temp = strtok(line4, " ");
     vert2x = strtok(NULL, " ");
     vert2y = strtok(NULL, " ");
     vert2z = strtok(NULL, " ");
     /* Read the fifth line and assign vertex #3 position */
     fgets(line5, 1024, f);
-    temp = strtok(line5, " ");
+    //temp = strtok(line5, " ");
     vert3x = strtok(NULL, " ");
     vert3y = strtok(NULL, " ");
     vert3z = strtok(NULL, " ");
@@ -1026,9 +1029,9 @@ void facet_properties(char filename[1024], double Ux, double Uy, double Uz, int 
     facet->vertex3[2] = atof(vert3z);
 
     /* COMPUTE UNIT VELOCITY VECTOR */
-    v[0] = Ux/Umag;
-    v[1] = Uy/Umag;
-    v[2] = Uz/Umag;
+    //v[0] = Ux/Umag;
+    //v[1] = Uy/Umag;
+    //v[2] = Uz/Umag;
 
     /* Find length of 1st side of the triangle */
     dist1[0] = facet->vertex2[0] - facet->vertex1[0];
@@ -1585,7 +1588,7 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 
   int i, j, k;
   int ifacet;
-  int counter;
+  //int counter;
   int cell_number;
   int total_counter = 0;
   //GAF: UNUSED int sum = 0;
@@ -1601,7 +1604,8 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
   int ijkcounter;
   double edgevec[3];
   double edgepos[3];
-  int ief, ifo, oflag;
+  int ief, ifo;
+  //int oflag;
   int iter, dupflag;
   int ixyz;
   facet_af = (int *) calloc(nfacets, sizeof(int));
@@ -1654,7 +1658,7 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 	cell_number = i*nc[1]*nc[2] + nc[2]*j + k;
 	cell = pcell + cell_number;
 
-	counter = 0;
+	//counter = 0;
 	cellcounter[i][j][k] = 0;
 
 	for(ifacet=0; ifacet<nfacets; ifacet++) {
@@ -1754,7 +1758,7 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 
   /* Loop over possibly overlapping facets  */
   for(ifo=0; ifo<overlap_counter; ifo++) {
-    oflag = 0;
+    //oflag = 0;
 
     ifacet = facet_overlaps[ifo];
 
@@ -1820,7 +1824,7 @@ void sort_facets(struct facet_struct *pfacet, struct cell_struct *pcell, int nfa
 		      cellcounter[i][j][k]++;
 		      total_counter++;
 		      facet_af[ifacet]++;
-		      oflag = 1;
+		      //oflag = 1;
 		      if(cellcounter[i][j][k]>=MAXFACETS) {
 			printf("MAXFACETS is too low! Increase its value!\n");
 			exit(1);
@@ -2016,7 +2020,7 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
   double ix1, ix2;
   int cell_number;
   int counter = 0;
-  int xflag;
+  //int xflag;
   double cpos[3]; /* Current particle position */
   double eps1 = 2.0e-15;
   double eps2 = 1.0e-15;
@@ -2058,7 +2062,7 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
 
   while((i>=0) && (i<nc[0]) && (j>=0) && (j<nc[1]) && (k>=0) && (k<nc[2])) {
 
-    xflag = 0;
+    //xflag = 0;
 
     cell_number = i*nc[2]*nc[1] + j*nc[2] + k;
     cell = pcell + cell_number;
@@ -2129,7 +2133,7 @@ void cell_track(struct particle_struct *pparticle, int ipart, struct cell_struct
 	      cpos[m] += (a+eps2)*particle->vel[m];
 	    }
 
-	    xflag = 1;
+	    //xflag = 1;
 	    if(iside==0) {
 	      i++;
 	    } else if(iside==1) {
@@ -2524,14 +2528,14 @@ void dria(double pvelf[], double pvelr[], double Vw, int GSI_MODEL, double alpha
 
   /* Outputs: pvelr = Reflected particle velocity vector in facet plane frame [m/s] */
 
-  double pvu[3];
+  //double pvu[3];
   double Vtot;
   double phi, theta;
   int i;
 
   for(i=0; i<3; i++) {
     pvelr[i] = 0.0;
-    pvu[i] = 0.0;
+    //pvu[i] = 0.0;
   }
 
   cll(pvelf, pvelr, Vw, GSI_MODEL, alphan, sigmat, alpha);
