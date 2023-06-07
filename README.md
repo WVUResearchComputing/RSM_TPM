@@ -98,3 +98,60 @@ The values for default are equivalent to use this command:
 ```
 
 
+# RSM+TPM on a Singularity container
+
+The following recipe can be use to create a Singularity image for RSM+TPM.
+Create a Singularity definition file such as `RSM+TPM.def` with the following contents:
+
+```
+Bootstrap: docker
+From: ubuntu:focal
+
+%files
+RSM+TPM.def
+
+%environment
+SHELL=/bin/bash
+export SHELL
+
+%post
+export DEBIAN_FRONTEND=noninteractive
+touch /etc/localtime
+apt-get -y update && apt-get -y upgrade && apt-get -y install apt-utils locales dialog && \
+locale-gen en_US.UTF-8 && \
+update-locale
+
+ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime && \
+apt-get install -y tzdata && \
+dpkg-reconfigure --frontend noninteractive tzdata
+
+apt-get -y upgrade && \
+apt-get -y install wget vim less build-essential git autoconf libgsl-dev libhdf5-dev libmpich-dev \
+python3 python3-numpy python3-matplotlib python3-pandas python3-sklearn python3-pip && \
+apt-get -y autoclean
+
+python3 -m pip install h5py
+
+cd /opt && \
+git clone https://github.com/WVUResearchComputing/RSM_TPM.git && \
+cd RSM_TPM/tpm && \
+./autogen.sh && \
+./configure --enable-mpi && \
+make && \
+cd .. && \
+./rsm_run_script.py --mpiexec=mpiexec --tpm=tpm/src/tpm --help
+
+echo "Sorting some env variables..."
+echo 'LANGUAGE="en_US:en"' >> $SINGULARITY_ENVIRONMENT
+echo 'LC_ALL="en_US.UTF-8"' >> $SINGULARITY_ENVIRONMENT
+echo 'LC_CTYPE="UTF-8"' >> $SINGULARITY_ENVIRONMENT
+echo 'LANG="en_US.UTF-8"' >>  $SINGULARITY_ENVIRONMENT
+```
+
+To create the singularity image install Singularity on your Linux machine and as superuser execute the following command:
+
+```
+singularity build RSM+TPM.sif RSM+TPM.def
+```
+
+
