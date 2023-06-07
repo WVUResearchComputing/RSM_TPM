@@ -2,7 +2,7 @@
 # Package setup: template configure.ac for TPM project
 # ------------------------------------------------------------------------------
 
-AC_INIT([tpm], [1.0], [gufranco@mail.wvu.edu])
+AC_INIT([tpm],[1.0],[gufranco@mail.wvu.edu])
 
 m4_include([m4/ax_lib_hdf5.m4])
 m4_include([m4/ax_mpi.m4])
@@ -103,7 +103,7 @@ fi
 #    Check for lib MPI (OpenMPI or MPICH)
 # ------------------------------------------------------------------------------
 CONFIGURE_HEADLINE([ MPI compiler ])
-AC_ARG_ENABLE(mpi, [AC_HELP_STRING([--enable-mpi],[MPI library required])], enable_mpi=$enableval, enable_mpi=no)
+AC_ARG_ENABLE(mpi, [AS_HELP_STRING([--enable-mpi],[MPI library required])], enable_mpi=$enableval, enable_mpi=no)
 
 if test "$enable_mpi" = "yes"; then
    ACX_MPI([],[AC_MSG_ERROR([could not find mpi library for --enable-mpi])])

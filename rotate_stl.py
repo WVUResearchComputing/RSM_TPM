@@ -67,7 +67,7 @@ def rotate_stl(base_folder):
 
     for i in [inputpath, meshdir]:
         if not os.path.isdir(i):
-            raise ValueError("Could not find folder: " % i)
+            raise ValueError("Could not find folder: %s" % i)
 
     ## Checking for needed files
     parentfile=inputpath+os.sep+'parent.txt'
